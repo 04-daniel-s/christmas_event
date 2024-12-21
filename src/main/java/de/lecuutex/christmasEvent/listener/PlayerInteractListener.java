@@ -1,9 +1,11 @@
 package de.lecuutex.christmasEvent.listener;
 
+import com.avaje.ebeaninternal.server.lib.sql.Prefix;
 import de.lecuutex.christmasEvent.ChristmasEvent;
 import de.lecuutex.christmasEvent.entities.ChristmasHead;
 import de.lecuutex.christmasEvent.entities.FoundHead;
 import net.nimbus.commons.Commons;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -18,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 public class PlayerInteractListener implements Listener {
 
@@ -67,6 +70,7 @@ public class PlayerInteractListener implements Listener {
 
         if (block.getType() == Material.SKULL) {
             System.out.println("1 reached");
+
             Optional<ChristmasHead> optional = ChristmasEvent.getInstance().getHeadService().filterCache(head -> head.exists(block.getLocation())).stream().findFirst();
             if (!optional.isPresent()) return;
 
@@ -79,6 +83,16 @@ public class PlayerInteractListener implements Listener {
 
                 player.sendMessage(ChristmasEvent.PREFIX + "Du hast einen versteckten Kopf gefunden!");
                 player.playSound(player.getLocation(), Sound.LEVEL_UP, 1, 1);
+
+                Bukkit.getScheduler().scheduleSyncDelayedTask(ChristmasEvent.getInstance(),() -> {
+                    int foundHeadcount = ChristmasEvent.getInstance().getFoundHeadService().filterCache(head -> head.getPlayerUUID().equals(player.getUniqueId().toString())).size();
+                    int overallCount = ChristmasEvent.getInstance().getHeadService().getCache().getAll().size();
+
+                    if(foundHeadcount==overallCount) {
+                        player.sendMessage(ChristmasEvent.PREFIX + "§aHerzlichen Glückwunsch, du hast §calle Köpfe §agefunden!");
+                        Bukkit.getOnlinePlayers().forEach(p->p.sendMessage(ChristmasEvent.PREFIX + ""));
+                    }
+                    },20);
             }
 
             return;

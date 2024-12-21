@@ -3,6 +3,8 @@ package de.lecuutex.christmasEvent;
 import de.lecuutex.christmasEvent.commands.HeadCommand;
 import de.lecuutex.christmasEvent.entities.ChristmasHead;
 import de.lecuutex.christmasEvent.listener.*;
+import de.lecuutex.christmasEvent.scheduler.ActionbarScheduler;
+import de.lecuutex.christmasEvent.scheduler.WorldTimeScheduler;
 import de.lecuutex.christmasEvent.services.FoundHeadService;
 import de.lecuutex.christmasEvent.services.HeadService;
 import lombok.Getter;
@@ -12,16 +14,6 @@ import net.nimbus.commons.database.query.Row;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
-import org.bukkit.event.block.*;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
-import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
-import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.vehicle.VehicleCollisionEvent;
-import org.bukkit.event.vehicle.VehicleCreateEvent;
-import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.PreparedStatement;
@@ -38,7 +30,7 @@ public final class ChristmasEvent extends JavaPlugin {
     @Getter
     private final List<String> showParticle = new ArrayList<>();
 
-    public final static String PREFIX = "§2NimbusNET §7Ξ §7";
+    public final static String PREFIX = "§cW§fe§ci§fh§cn§fa§cc§fh§ct§fs§ce§fv§ce§fn§ct §7Ξ §7";
 
     @Getter
     private static ChristmasEvent instance;
@@ -58,6 +50,12 @@ public final class ChristmasEvent extends JavaPlugin {
 
         headService = new HeadService();
         foundHeadService = new FoundHeadService();
+
+        ActionbarScheduler actionbarScheduler = new ActionbarScheduler();
+        actionbarScheduler.start();
+
+        WorldTimeScheduler worldTimeScheduler = new WorldTimeScheduler();
+        worldTimeScheduler.start();
 
         getCommand("head").setExecutor(new HeadCommand());
 
@@ -95,16 +93,14 @@ public final class ChristmasEvent extends JavaPlugin {
             System.out.println("§cEVENT §7> §a" + result.getRows().size() + " skulls have been loaded");
         });
 
-        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> {
-            showParticle.stream().filter(uuid -> Bukkit.getPlayer(UUID.fromString(uuid)) != null).map(uuid -> Bukkit.getPlayer(UUID.fromString(uuid))).forEach(player -> {
-                List<ChristmasHead> heads = headService.getCache().getAll();
-                for (ChristmasHead head : heads) {
-                    Location headLocation = head.getLocation();
-                    if (player.getLocation().distance(headLocation) > 50) continue;
-                    player.playEffect(headLocation, Effect.HEART, 1);
-                }
-            });
-        }, 0, 10);
+        Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> showParticle.stream().filter(uuid -> Bukkit.getPlayer(UUID.fromString(uuid)) != null).map(uuid -> Bukkit.getPlayer(UUID.fromString(uuid))).forEach(player -> {
+            List<ChristmasHead> heads = headService.getCache().getAll();
+            for (ChristmasHead head : heads) {
+                Location headLocation = head.getLocation();
+                if (player.getLocation().distance(headLocation) > 50) continue;
+                player.playEffect(headLocation, Effect.HEART, 1);
+            }
+        }), 0, 10);
     }
 
     @Override
@@ -116,7 +112,7 @@ public final class ChristmasEvent extends JavaPlugin {
         String headLocations = "CREATE TABLE IF NOT EXISTS`head_locations`\n" + "(\n" + " `id`        bigint NOT NULL AUTO_INCREMENT ,\n" + " `creator`   varchar(255) NOT NULL ,\n" + " `timestamp` timestamp NOT NULL ,\n" + " `location`  longtext NOT NULL ,\n" + "\n" + "PRIMARY KEY (`id`),\n" + "KEY `FK_1` (`creator`),\n" + "CONSTRAINT `FK_23` FOREIGN KEY `FK_1` (`creator`) REFERENCES `players` (`uuid`)\n" + ");\n";
         createTable(headLocations);
 
-        String christmasPlayers = "CREATE TABLE IF NOT EXISTS `found_heads`\n" + "(\n" + " `id`        bigint NOT NULL AUTO_INCREMENT ,\n" + " `player_uuid`      varchar(255) NOT NULL ,\n" + " `head_id`   bigint NOT NULL ,\n" + " `timestamp` timestamp NOT NULL ,\n" + "\n" + "PRIMARY KEY (`id`),\n" + "KEY `FK_1` (`uuid`),\n" + "CONSTRAINT `FK_24` FOREIGN KEY `FK_1` (`uuid`) REFERENCES `players` (`uuid`),\n" + "KEY `FK_2` (`head_id`),\n" + "CONSTRAINT `FK_25` FOREIGN KEY `FK_2` (`head_id`) REFERENCES `head_locations` (`id`)\n" + ");\n";
+        String christmasPlayers = "CREATE TABLE IF NOT EXISTS `found_heads`\n" + "(\n" + " `id`        bigint NOT NULL AUTO_INCREMENT ,\n" + " `player_uuid`      varchar(255) NOT NULL ,\n" + " `head_id`   bigint NOT NULL ,\n" + " `timestamp` timestamp NOT NULL ,\n" + "\n" + "PRIMARY KEY (`id`),\n" + "KEY `FK_1` (`player_uuid`),\n" + "CONSTRAINT `FK_24` FOREIGN KEY `FK_1` (`player_uuid`) REFERENCES `players` (`uuid`),\n" + "KEY `FK_2` (`head_id`),\n" + "CONSTRAINT `FK_25` FOREIGN KEY `FK_2` (`head_id`) REFERENCES `head_locations` (`id`)\n" + ");\n";
         createTable(christmasPlayers);
     }
 

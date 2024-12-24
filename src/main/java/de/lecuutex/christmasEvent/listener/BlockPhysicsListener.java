@@ -8,6 +8,6 @@ public class BlockPhysicsListener implements Listener {
 
     @EventHandler
     public void onBlockPhysicsEvent(BlockPhysicsEvent event) {
-        event.setCancelled(true);
+        //event.setCancelled(false);
     }
 }

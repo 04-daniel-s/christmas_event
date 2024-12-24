@@ -7,6 +7,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
@@ -31,13 +32,25 @@ public class HeadCommand implements CommandExecutor {
                 player.setGameMode(GameMode.CREATIVE);
                 player.getInventory().clear();
 
-                player.getInventory().addItem(getUpdateItem());
-                player.getInventory().addItem(getSkullItem());
-                player.getInventory().addItem(getCheckItem());
+                player.getInventory().setItem(0, getUpdateItem());
+                player.getInventory().setItem(1, getSkullItem());
+                player.getInventory().setItem(2, getCheckItem());
 
             } else if (args[0].equalsIgnoreCase("cancel")) {
                 if (!ChristmasEvent.getInstance().getCanBuild().contains(player.getUniqueId().toString())) return true;
                 ChristmasEvent.getInstance().getCanBuild().remove(player.getUniqueId().toString());
+
+                player.getInventory().clear();
+
+                ItemStack spawn = new ItemStack(Material.FIREWORK_CHARGE);
+                ItemMeta meta = spawn.getItemMeta();
+                meta.setDisplayName("§fZum §cSpawn §fteleportieren");
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+                meta.addItemFlags(ItemFlag.HIDE_POTION_EFFECTS);
+                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                spawn.setItemMeta(meta);
+                player.getInventory().setItem(4, spawn);
+
                 player.sendMessage(ChristmasEvent.PREFIX + "§7Du kannst nicht mehr mit Köpfen interagieren!");
 
             } else if (args[0].equalsIgnoreCase("show")) {
@@ -85,4 +98,4 @@ public class HeadCommand implements CommandExecutor {
 
         return itemStack;
     }
- }
+}

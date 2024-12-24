@@ -4,6 +4,7 @@ import de.lecuutex.christmasEvent.commands.HeadCommand;
 import de.lecuutex.christmasEvent.entities.ChristmasHead;
 import de.lecuutex.christmasEvent.listener.*;
 import de.lecuutex.christmasEvent.scheduler.ActionbarScheduler;
+import de.lecuutex.christmasEvent.scheduler.ParticleScheduler;
 import de.lecuutex.christmasEvent.scheduler.WorldTimeScheduler;
 import de.lecuutex.christmasEvent.services.FoundHeadService;
 import de.lecuutex.christmasEvent.services.HeadService;
@@ -14,6 +15,7 @@ import net.nimbus.commons.database.query.Row;
 import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.PreparedStatement;
@@ -53,9 +55,16 @@ public final class ChristmasEvent extends JavaPlugin {
 
         ActionbarScheduler actionbarScheduler = new ActionbarScheduler();
         actionbarScheduler.start();
+        //TODO: CHECK IF HEAD POSITION BLOCK IS AIR IN CASE OF WORLD BUGS
+        //TODO SCOREBOARD TOP 5
+        //TODO FEUERWERK BEIM 1.
+        //TODO DISCORD PING MIT GEWINNER
 
         WorldTimeScheduler worldTimeScheduler = new WorldTimeScheduler();
         worldTimeScheduler.start();
+
+        ParticleScheduler particleScheduler = new ParticleScheduler();
+        particleScheduler.start();
 
         getCommand("head").setExecutor(new HeadCommand());
 
@@ -80,7 +89,8 @@ public final class ChristmasEvent extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new BlockFadeListener(), this);
         Bukkit.getPluginManager().registerEvents(new BlockFormListener(), this);
         Bukkit.getPluginManager().registerEvents(new EntityBlockFormListener(), this);
-        Bukkit.getPluginManager().registerEvents(new AsyncPlayerPreLoginListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerMoveListener(), this);
+        Bukkit.getPluginManager().registerEvents(new BlockBreakListener(), this);
 
         Commons.getInstance().getExecutorService().execute(() -> {
             Result result = headService.sqlQuery("SELECT * FROM head_locations");
@@ -106,6 +116,9 @@ public final class ChristmasEvent extends JavaPlugin {
     @Override
     public void onDisable() {
         Bukkit.getWorld("world").save();
+
+        foundHeadService.persistAll();
+        headService.persistAll();
     }
 
     private void createTables() {

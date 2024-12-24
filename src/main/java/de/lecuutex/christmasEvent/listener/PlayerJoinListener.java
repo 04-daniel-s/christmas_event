@@ -27,8 +27,10 @@ public class PlayerJoinListener implements Listener {
         player.setFoodLevel(20);
         event.setJoinMessage("");
         player.setGameMode(GameMode.ADVENTURE);
-        player.teleport(new Location(Bukkit.getWorld("world"), -0.5, 66, -0.5));
+        player.teleport(new Location(Bukkit.getWorld("world"), -0.5, 67, -0.5));
         player.getInventory().clear();
+
+        ChristmasEvent.getInstance().getScoreboardHandler().createScoreboard(player);
 
         ItemStack spawn = new ItemStack(Material.FIREWORK_CHARGE);
         ItemMeta meta = spawn.getItemMeta();
@@ -49,9 +51,8 @@ public class PlayerJoinListener implements Listener {
                 foundHeadService.updateCache(foundHead.getId(), foundHead);
             }
 
-            System.out.println("EVENT | heads for the following player has been cached: " + player.getUniqueId().toString() + " [" + result.getRows().size() + "]");
-            System.out.println("CURRENTLY CACHED: " + foundHeadService.filterCache(head -> head.getPlayerUUID().equals(player.getUniqueId().toString())).size());
-            foundHeadService.getCache().getAll().forEach(System.out::println);
+            System.out.println("EVENT | heads for the following player has been cached: " + player.getName() + " [" + result.getRows().size() + "]");
+            Commons.getInstance().getNimbusPlayerService().loadNimbusPlayer(player.getUniqueId().toString());
         });
     }
 }

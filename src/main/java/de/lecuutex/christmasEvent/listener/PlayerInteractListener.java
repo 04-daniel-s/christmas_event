@@ -34,7 +34,7 @@ public class PlayerInteractListener implements Listener {
         if (player.getItemInHand() != null && player.getItemInHand().getType() == Material.FIREWORK_CHARGE) {
             if (event.getAction() != Action.RIGHT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_BLOCK) return;
 
-            player.teleport(new Location(Bukkit.getWorld("world"), -0.5, 66, -0.5));
+            player.teleport(new Location(Bukkit.getWorld("world"), -0.5, 67, -0.5));
 
         } else if (ChristmasEvent.getInstance().getCanBuild().contains(player.getUniqueId().toString())) {
             if (player.getItemInHand() == null) return;

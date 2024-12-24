@@ -3,18 +3,15 @@ package de.lecuutex.christmasEvent;
 import de.lecuutex.christmasEvent.commands.HeadCommand;
 import de.lecuutex.christmasEvent.entities.ChristmasHead;
 import de.lecuutex.christmasEvent.listener.*;
-import de.lecuutex.christmasEvent.scheduler.ActionbarScheduler;
-import de.lecuutex.christmasEvent.scheduler.ParticleScheduler;
-import de.lecuutex.christmasEvent.scheduler.WorldTimeScheduler;
+import de.lecuutex.christmasEvent.scheduler.*;
+import de.lecuutex.christmasEvent.scoreboard.ScoreboardHandler;
 import de.lecuutex.christmasEvent.services.FoundHeadService;
 import de.lecuutex.christmasEvent.services.HeadService;
 import lombok.Getter;
 import net.nimbus.commons.Commons;
 import net.nimbus.commons.database.query.Result;
 import net.nimbus.commons.database.query.Row;
-import org.bukkit.Bukkit;
-import org.bukkit.Effect;
-import org.bukkit.Location;
+import org.bukkit.*;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -43,8 +40,15 @@ public final class ChristmasEvent extends JavaPlugin {
     @Getter
     private FoundHeadService foundHeadService;
 
+    @Getter
+    private ScoreboardHandler scoreboardHandler;
+
     @Override
     public void onEnable() {
+        //TODO SCOREBOARD TOP 5
+        //TODO FEUERWERK BEIM 1.
+        //TODO DISCORD PING MIT GEWINNER
+
         instance = this;
 
         Commons.getInstance().init();
@@ -52,19 +56,25 @@ public final class ChristmasEvent extends JavaPlugin {
 
         headService = new HeadService();
         foundHeadService = new FoundHeadService();
+        scoreboardHandler = new ScoreboardHandler();
 
         ActionbarScheduler actionbarScheduler = new ActionbarScheduler();
         actionbarScheduler.start();
-        //TODO: CHECK IF HEAD POSITION BLOCK IS AIR IN CASE OF WORLD BUGS
-        //TODO SCOREBOARD TOP 5
-        //TODO FEUERWERK BEIM 1.
-        //TODO DISCORD PING MIT GEWINNER
 
         WorldTimeScheduler worldTimeScheduler = new WorldTimeScheduler();
         worldTimeScheduler.start();
 
         ParticleScheduler particleScheduler = new ParticleScheduler();
         particleScheduler.start();
+
+        UpdateSeekerScheduler updateSeekerScheduler = new UpdateSeekerScheduler();
+        updateSeekerScheduler.start();
+
+        AnimateScoreboardScheduler animateScoreboardScheduler = new AnimateScoreboardScheduler();
+        animateScoreboardScheduler.start();
+
+        HeadHintScheduler headHintScheduler = new HeadHintScheduler();
+        headHintScheduler.start();
 
         getCommand("head").setExecutor(new HeadCommand());
 
@@ -102,6 +112,13 @@ public final class ChristmasEvent extends JavaPlugin {
 
             System.out.println("§cEVENT §7> §a" + result.getRows().size() + " skulls have been loaded");
         });
+
+        Bukkit.getScheduler().runTaskLater(this, () -> {
+            for (ChristmasHead head : headService.getCache().getAll()) {
+                if (Bukkit.getWorld("world").getBlockAt(head.getLocation()).getType() != Material.SKULL)
+                    System.out.println("The following head has not been placed in the world: " + head.getId());
+            }
+        }, 20);
 
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> showParticle.stream().filter(uuid -> Bukkit.getPlayer(UUID.fromString(uuid)) != null).map(uuid -> Bukkit.getPlayer(UUID.fromString(uuid))).forEach(player -> {
             List<ChristmasHead> heads = headService.getCache().getAll();
